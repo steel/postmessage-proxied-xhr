@@ -35,12 +35,25 @@
   });
 
   test("header not allowed error works", function() {
+    var Request = PPX.buildClientConstructor("server.html");
     var req = Request();
     req.open("GET", "sample.txt");
     req.setRequestHeader('X-blarg', 'hi');
     req.onreadystatechange = function() {
       equal(req.readyState, req.DONE);
       equal(req.responseText, "header 'X-blarg' is not allowed.");
+      start();
+    };
+    req.send(null);
+    stop();
+  });
+
+  test("accepted headers work", function(){
+    var req = Request();
+    req.open("GET", "sample.json");
+    req.setRequestHeader('If-Modified-Since', 'now');
+    req.onreadystatechange = function () {
+      equal(req.responseText, '{"sample":"this is a test"}');
       start();
     };
     req.send(null);

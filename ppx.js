@@ -181,8 +181,18 @@ var PPX = (function() {
     version: "0.1",
     utils: utils,
     config: config,
-    startServer: function startServer(options) {
+    startServer: function startServer(options, allowedParameters) {
       options = options || {};
+      allowedParameters = allowedParameters || {};
+      if (allowedParameters.requestHeaders !== undefined){
+        config.requestHeaders = config.requestHeaders.concat(allowedParameters.requestHeaders);
+      }
+      if (allowedParameters.requestMethods !== undefined){
+        config.requestMethods = config.requestMethods.concat(allowedParameters.requestMethods);
+      }
+      if (allowedParameters.requestContentTypes !== undefined){
+        config.requestContentTypes = config.requestContentTypes.concat(allowedParameters.requestContentTypes);
+      }
 
       var otherWindow = options.window || window.parent;
       var channel = SimpleChannel(otherWindow, function(data, origin) {

@@ -29,6 +29,19 @@
     stop();
   });
 
+  test("success for allowed headers", function() {
+    jQuery.ajax({
+      url: "sample.json",
+      usePostMessage: true,
+      headers: {'Authorization': 'hi'},
+      success: function(data, textStatus, req) {
+        ok(req.isProxiedThroughPostMessage);
+        equal(data.sample, "this is a test");
+        start();
+      }
+    });
+    stop();
+  });
   test("error works for header not allowed", function() {
     jQuery.ajax({
       url: "nonexistent.txt",
