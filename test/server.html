@@ -8,7 +8,7 @@ PPX.startServer({
     access.allowOrigin = "*";
   }
 }, {requestHeaders: ['If-Modified-Since', 'Authorization', 'X-Requested-With', 'If-None-Match', 'Cookie'],
-    requestContentTypes: ['application/json'],
+    requestContentTypes: ['application/json', ':application/vnd.absperf.sskj1+json', 'application/vnd.absperf.ssmj1+json'],
     requestMethods: ['OPTIONS', 'PUT']
 });
 </script>
