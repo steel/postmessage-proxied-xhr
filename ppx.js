@@ -21,7 +21,12 @@ var PPX = (function() {
       if (window.console && window.console.warn)
         window.console.warn(msg);
     },
-    absolutifyURL: function absolutifyURL(url) {
+    absolutifyURL: function absolutifyURL(url, iframeUrl) {
+      // Match secure protocol
+      if (iframeUrl != null && iframeUrl.match(/^https/)){
+        url = url.replace('http', 'https');
+      }
+
       var a = document.createElement('a');
       a.setAttribute("href", url);
       return a.href;
@@ -66,7 +71,7 @@ var PPX = (function() {
     // (c) Steven Levithan <stevenlevithan.com>
     // MIT License
     parseUri: function parseUri(str) {
-      var	o = utils.parseUriOptions,
+      var o = utils.parseUriOptions,
           m = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
           uri = {},
           i = 14;
@@ -221,17 +226,30 @@ var PPX = (function() {
                 return;
               }
             }
-            channel.send({
+
+            var data = {
               cmd: "readystatechange",
               readyState: req.readyState,
-              status: req.status,
-              statusText: req.statusText,
-              responseText: req.responseText,
-              responseHeaders: req.getAllResponseHeaders()
-            });
+            };
+
+            // IE blows up when trying to access responseText when readyState isn't 4
+            if (req.readyState == 4){
+              data.responseText = req.responseText;
+              data.status = req.status;
+              data.statusText = req.statusText;
+              data.responseHeaders = req.getAllResponseHeaders();
+            }
+
+            channel.send(data);
           };
 
           var contentType = data.headers['Content-Type'];
+
+          // Strip out chartset from content type
+          if (contentType) {
+            contentType = contentType.split(';')[0];
+          }
+
           if (contentType &&
               utils.inArray(contentType, config.requestContentTypes) == -1) {
             channel.error("invalid content type for a simple request: " +
@@ -289,6 +307,7 @@ var PPX = (function() {
           open: function(aMethod, aUrl) {
             method = aMethod;
             url = aUrl;
+
             self.readyState = self.OPENED;
             if (self.onreadystatechange)
               self.onreadystatechange();
@@ -346,7 +365,7 @@ var PPX = (function() {
                 self.onreadystatechange();
             });
 
-            iframe.setAttribute("src", utils.absolutifyURL(iframeURL));
+            iframe.setAttribute("src", utils.absolutifyURL(iframeURL, url));
             iframe.style.display = "none";
             document.body.appendChild(iframe);
           }
