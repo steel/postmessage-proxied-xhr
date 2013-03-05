@@ -5,7 +5,7 @@
 <script>
 PPX.startServer({
   modifyAccessControl: function(access) {
-    access.allowOrigin = "*";
+    access.allowOrigin = data ? data.origin : "*";
   }
 }, {requestHeaders: ['If-Modified-Since', 'Authorization', 'X-Requested-With', 'If-None-Match', 'Cookie'],
     requestContentTypes: ['application/json', ':application/vnd.absperf.sskj1+json', 'application/vnd.absperf.ssmj1+json'],
