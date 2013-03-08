@@ -15,7 +15,7 @@ var PPX = (function() {
       "text/plain"
     ]
   };
-  
+
   var utils = {
     warn: function warn(msg) {
       if (window.console && window.console.warn)
@@ -119,9 +119,22 @@ var PPX = (function() {
       }
 
       return -1;
+    },
+    getInternetExplorerVersion: function() {
+      // Returns the version of Internet Explorer or a -1
+      // (indicating the use of another browser).
+      var rv = -1; // Return value assumes failure.
+      if (navigator.appName == 'Microsoft Internet Explorer')
+      {
+        var ua = navigator.userAgent;
+        var re  = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+        if (re.exec(ua) != null)
+          rv = parseFloat( RegExp.$1 );
+      }
+      return rv;
     }
   };
-  
+
   function validateRequest(data, access, channel) {
     if (!access.allowOrigin) {
       channel.error("CORS is unsupported at that path.");
@@ -132,7 +145,7 @@ var PPX = (function() {
       channel.error("message from invalid origin: " + data.origin);
       return;
     }
-    
+
     return true;
   }
 
@@ -146,7 +159,7 @@ var PPX = (function() {
     function getOtherWindow() {
       return other.postMessage ? other : other.contentWindow;
     }
-    
+
     var self = {
       onMessage: onMessage,
       onError: onError || function defaultOnError(message) {
@@ -177,7 +190,7 @@ var PPX = (function() {
       else
         self.onMessage(data, event.origin);
     }
-    
+
     utils.on(window, "message", messageHandler);
     return self;
   }
@@ -217,7 +230,9 @@ var PPX = (function() {
 
           req.open(data.method, data.url);
           req.onreadystatechange = function() {
-            if (req.readyState == 2) {
+            var ieVersion = utils.getInternetExplorerVersion();
+
+            if ((req.readyState == 2 && !ieVersion) || (req.readyState == 4 && ieVersion < 9)) {
               var access = parseAccessControlHeaders(req);
               if (options.modifyAccessControl)
                 options.modifyAccessControl(access, data);
@@ -232,7 +247,6 @@ var PPX = (function() {
               readyState: req.readyState,
             };
 
-            // IE blows up when trying to access responseText when readyState isn't 4
             if (req.readyState == 4){
               data.responseText = req.responseText;
               data.status = req.status;
@@ -244,12 +258,9 @@ var PPX = (function() {
           };
 
           var contentType = data.headers['Content-Type'];
-
-          // Strip out chartset from content type
           if (contentType) {
             contentType = contentType.split(';')[0];
           }
-
           if (contentType &&
               utils.inArray(contentType, config.requestContentTypes) == -1) {
             channel.error("invalid content type for a simple request: " +
@@ -282,7 +293,7 @@ var PPX = (function() {
         var iframe;
         var headers = {};
         var responseHeaders = "";
-        
+
         function cleanup() {
           if (channel) {
             channel.destroy();
@@ -293,7 +304,7 @@ var PPX = (function() {
             iframe = null;
           }
         }
-        
+
         var self = {
           UNSENT: 0,
           OPENED: 1,
@@ -343,7 +354,7 @@ var PPX = (function() {
                   body: body || ""
                 });
                 break;
-                
+
                 case "readystatechange":
                 self.readyState = parseInt(data.readyState);
                 self.status = parseInt(data.status);
